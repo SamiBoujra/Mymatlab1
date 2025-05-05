@@ -20,22 +20,20 @@ E0f = 10;%eV
 DeltaEf = 80;
 dEf = DeltaEf/Nf;
 
-dt = h/(DeltaEf*eV);%time step (sec)
 
-t = (-Nf/2:Nf/2-1)*dt;
 
-Ef = E0f + (0:Nf-1)*dEf;
+
 
 
 %% delay/Delta E sampling
 
 Ntau = 400;
 dtau = 0.01*fs;
-ntau = 0:Ntau-1;
-tau = ntau*dtau;
 
-dDeltaE = h/(Ntau*dtau*eV);
-DeltaE = (-Ntau/2:Ntau/2-1)*dDeltaE;
+
+
+
+
 
 
 %% Ec sampling
@@ -55,7 +53,7 @@ Ec = E0c + nc*dEc;
 
 %% Density matrix
 
-shape = PulseShape('sin2',[Nc Nc]);
+
 
 
 NE = Sampling_Sami(Nc,Ntau);
@@ -71,16 +69,11 @@ rhoE = full(spdiags(B,ndiag,M));
 
 
 
-figure(815)
-imagesc(rhoE,[0 max(vdiag)])
-colormap(Carte_de_couleurs)
-
-%%
-rhoDE = RhoE_2_RhoDE(rhoE,Ntau,Nc)
+% figure(815)
+% imagesc(rhoE,[0 max(vdiag)])
+% colormap(Carte_de_couleurs)
 
 
-%%
-rhoE2 = RhoDE_2_RhoE(rhoDE,Ntau,Nc)
 
 %%
 %% KE sampling
@@ -91,7 +84,7 @@ nc= (-N/2:N/2-1);
 
 E0 = 10;%eV
 DeltaE = 80;
-dE = DeltaE/N;
+
 
 dt = h/(DeltaE*eV);%time step (sec)
 dE = DeltaE/N;
@@ -148,9 +141,7 @@ P(:,2) = 0.5*shape(:).*exp(-1i*2*pi*(E0_EWP2-E0)*eV/h*n(:)*dt);
 [rhot,nu] = Density_matrix(P,1);
 rhot = fftshift(rhot);
 rhoE = SwitchStateRep(rhot,'Rhot2RhoE',1);
-rhose=rhoE*rhoE'
-figure(7)
-imagesc(abs(rhoE2))
+
 % Supposons que vous vouliez ajouter p zéros de chaque côté :
 p = 100;
 
@@ -160,34 +151,14 @@ rhoDE = RhoE_2_RhoDE(rhoE,Ntau,Nc);
 rhoE2 = RhoDE_2_RhoE(rhoDE,Ntau,Nc);
 Niter = 900;
 indxSplit = 37;
-[PsiChan1,PsiChan2,rhoc] = DensMatChanSplit(rhoE2,[25 50],Niter,1);
-Rhos=PsiChan1*PsiChan2'; 
 % rhoE2_bin(rhoE2 ~= 0) = 1;
-figure(78)
-imagesc(abs(rhoE))
-figure(72)
-imagesc(abs(Rhos))
-figure(75)
-imagesc(abs(rhoc))
+% figure(78)
+% imagesc(abs(rhoE))
+% 
+% figure(75)
+% imagesc(abs(rhoc))
 
 %%
-% A0 = 3;
-% E0_IR = 1.55;%Central photon energy of laser dressing pulse (eV)
-% T_IR = h/(E0_IR*eV);%Period of the dressing pulse (sec)
-% dtG=0.08;
-% df = 1/(N*dt);
-% fIR = 1/T_IR;
-% kfIR = 4;
-% E0_IR = 1.55;%Central photon energy of laser dressing pulse (eV)
-% T_IR = h/(E0_IR*eV*fs);%Period of the dressing pulse (sec)
-% 
-% sigt = 3;
-% Phi_mod = A0.*exp(-(nc*dtG).^2/(2*sigt^2)).*cos(2*pi*nc*dtG/T_IR);
-% Gt = fftshift(exp(1i*Phi_mod));
-
-% figure(9184)
-% plot(Phi_mod)
-
 E0_IR = 1.55;%Central photon energy of laser dressing pulse (eV)
 T_IR = h/(E0_IR*eV);%Period of the dressing pulse (sec)
 omega_IR = 2*pi/T_IR;
@@ -209,51 +180,31 @@ shape = PulseShape('gauss',[N round(FWHM_IRfield/dt)],1);
 A_IR0 = -sin(omega_IR*t(:)+pi/2).*shape(:)/omega_IR;
 
 A_IR = A_IR0*sqrt(2*IntensityW/(c*epsilon0));
-
-figure
-plot(t/fs,A_IR)
+% 
+% figure
+% plot(t/fs,A_IR)
 
 [Phi_mod,intA,intA2] = Phase_modulator(A_IR,dt,p);
 Gt = exp(1i*Phi_mod);
 
-% ish = 500;
-% %Gtilde = circshift(ifft(Gt).',ish);
-% Gtilde = 1/N*fft(Gt(:));
-% C = fftshift(Gtilde*Gtilde');
 
 %Crot = 
-figure(1851)
-imagesc(t/fs,Ec,Phi_mod)
-title('Phase modulator \phi(\epsilon_c,t)')
-ylabel('Energy \epsilon_c (eV)')
-xlabel('time (fs)')
-colormap('jet')
+% figure(1851)
+% imagesc(t/fs,Ec,Phi_mod)
+% title('Phase modulator \phi(\epsilon_c,t)')
+% ylabel('Energy \epsilon_c (eV)')
+% xlabel('time (fs)')
+% colormap('jet')
 
 Gtild = (ifft(Gt,[],2));
 Gtild =fftshift(Gtild.',1);
 Ef = Ec;
 
-figure(1852)
-imagesc(Ef,Ec,abs(Gtild))
-ylabel('\epsilon_1')
-xlabel('p')
-title('\tilde{G}(p,\epsilon_1)')
-colormap(Carte_de_couleurs)
-
-
-% figure(9185)
-% subplot(2,1,1)
-% plot(Ef,(abs(Gtilde)))
-% subplot(2,1,2)
-% imagesc(Ef,Ef,(abs(C)))
-% colormap(Carte_de_couleurs)
-
-%%
-
-% Crot = RhoE_2_RhoDE(C,Ntau,Nc);
-% N2=size(Crot,1);
-% figure(1414)
-% imagesc(abs(Crot.'))
+% figure(1852)
+% imagesc(Ef,Ec,abs(Gtild))
+% ylabel('\epsilon_1')
+% xlabel('p')
+% title('\tilde{G}(p,\epsilon_1)')
 % colormap(Carte_de_couleurs)
 
 %%
@@ -310,56 +261,50 @@ for iDE = 1:Ntau
     size(vRhoDE)
     Stild(:,iDE) = M_new*vRhoDE;
 % %     
-      RhoE_rot_disp = rhoDE;
-      RhoE_rot_disp(:,iDE) = max(max(rhoDE));
-    
-    figure(181)
-    subplot(1,2,1)
-    imagesc(abs(M_new))
-    ylabel('E_f (pix)')
-    xlabel('E_c (pix)')
-    colormap(Carte_de_couleurs)
-    
-    subplot(1,2,2)
-    imagesc(abs(RhoE_rot_disp))
-    colormap(Carte_de_couleurs)
-    pause(0.1)
+    %   RhoE_rot_disp = rhoDE;
+    %   RhoE_rot_disp(:,iDE) = max(max(rhoDE));
+    % 
+    % figure(181)
+    % subplot(1,2,1)
+    % imagesc(abs(M_new))
+    % ylabel('E_f (pix)')
+    % xlabel('E_c (pix)')
+    % colormap(Carte_de_couleurs)
+    % 
+    % subplot(1,2,2)
+    % imagesc(abs(RhoE_rot_disp))
+    % colormap(Carte_de_couleurs)
+    % pause(0.1)
     
 end
 
 Stild(isnan(Stild)) = 0;
 
-%Stild(:,N/2+2:N) = conj(fliplr(Stild(:,2:N/2)));
-
-figure(493)
-plot((sum(abs(Stild))),'ro-')
-
-figure(494)
-semilogy((sum(abs(Stild))),'ro-')
-
-figure(195)
-imagesc(abs(Stild))
-colormap(Carte_de_couleurs)
+% figure(493)
+% plot((sum(abs(Stild))),'ro-')
+% 
+% figure(494)
+% semilogy((sum(abs(Stild))),'ro-')
+% 
+% figure(195)
+% imagesc(abs(Stild))
+% colormap(Carte_de_couleurs)
 %%
 S = fft(Stild,[],2);
 
-figure(1958)
-imagesc(abs(S))
-colorbar
-colormap(Carte_de_couleurs)
-figure(1959)
-plot(real(S(181,:)),'ro-')
+% figure(1958)
+% imagesc(abs(S))
+% colorbar
+% colormap(Carte_de_couleurs)
+% figure(1959)
+% plot(real(S(181,:)),'ro-')
 %%
-    % 2) Add noise to S (S_ideal).
-    %    For example: Gaussian noise with SNR ~ 20 dB
-    % -----------------------------------------------------------
+
  mean(abs(S));
  noise_level = 0*1e-6; 
  S_noisy = S + noise_level * randn(size(S));
 
  S_noisy1=ifft(S_noisy,[],2);
-    % Optional: Poisson-based noise
-    % S_noisy = poissrnd(max(0,S_ideal));
 
 figure; 
 subplot(2,1,1);
@@ -367,14 +312,10 @@ imagesc(abs(S)); colorbar; title('Ideal S');
 subplot(2,1,2);
 imagesc(abs(S_noisy)); colorbar; title('Noisy S');
 Stild2 = ifft(S_noisy, [], 2);
-% Preallocate
 [N, twoNE, Ntau] = size(Ctot);
-% twoNE should be 2*NE
-NE_half = (twoNE / 2);  % = NE
 
-% ----------------------------
-% Reconstruction par GCV slice‑by‑slice
-% ----------------------------
+NE_half = (twoNE / 2); 
+
 %% Pré‑requis : Ec, tau, Ctot, Stild2, E0_EWP1, E0_EWP2, dE, fs, N*1e6(
 
 NE    = size(Ctot,2)/2;    % Ctot est N x (2*NE) x Ntau
@@ -415,6 +356,12 @@ title('Template 2D-Gaussian Circular');
 
 %% Reconstruction avec weighted Tikhonov
 rhoDE_weighted = zeros(NE, Ntau);
+% Avant votre boucle de reconstruction, définissez la variance de bruit :
+sigma2 = 1^2;    % noise_level tel que dans votre script
+
+% Pré-allocation
+Cov_rhoDE = zeros(NE, NE, Ntau);
+Var_rhoDE = zeros(NE, Ntau);
 for iDE=1:Ntau
 % Boucle sur chaque tranche de délaior iDE = 1:Ntau
     % Construction de la matrice modèle M et vecteur data d
@@ -449,11 +396,43 @@ for iDE=1:Ntau
     rhoDE_weighted(:, iDE) = x_final;
 
     fprintf('Slice %d: gamma_opt = %.2e\n', iDE, gamma_opt);
+    % Matrice de régularisation optimale
+    A_opt = B + gamma_opt * W;
+
+    % Reconstruction finale
+    x_final = A_opt \ Bd;
+    rhoDE_weighted(:, iDE) = x_final;
+
+    % Matrice de covariance analytique
+    Cxi = sigma2 * (A_opt \ B) / A_opt;  
+    Cov_rhoDE(:, :, iDE) = Cxi;
+
+    % Variances (diagonale)
+    Var_rhoDE(:, iDE) = diag(Cxi);
+
+    fprintf('Slice %d: var_min = %.2e, var_max = %.2e\n', ...
+            iDE, min(Var_rhoDE(:,iDE)), max(Var_rhoDE(:,iDE)));
 end
 
 % Conversion en rhoE (fonction utilisateur)
 rhoE_weighted = RhoDE_2_RhoE(rhoDE_weighted, Ntau, Nc);
+varE=  RhoDE_2_RhoE(Var_rhoDE, Ntau, Nc);
+figure;
+imagesc(tau, KE1, abs(Var_rhoDE));
+axis xy;
+xlabel('Delay \tau (fs)');
+ylabel('Energy (eV)');
+title('Variance de chaque coefficient de \rhoDE_{weighted}');
+colorbar;
 
+% % Optionnel : coupe pour un délai fixe i0
+% i0 = round(Ntau/2);
+% figure;
+% plot(KE1, Var_rhoDE(:, i0), 'o-');
+% xlabel('Energy (eV)');
+% ylabel('Variance');
+% title(sprintf('Variance à \\tau = %.2f fs', tau(i0)));
+% grid on;
 % Affichage des résultats
 figure(2);
 subplot(1,2,1);
@@ -505,8 +484,6 @@ end
 
 figure
 imagesc(abs(rhoDE_weighted))
-%% 
-%% 
 
 
 %%
@@ -522,43 +499,3 @@ rhoc_sm = smooth2D_with_smooth(rhoc, 40, 'moving');
 figure; 
 subplot(1,2,1); imagesc(abs(rhoc)); colorbar; title('Global');
 subplot(1,2,2); imagesc(abs(rhoE2)); colorbar; title('Local');
-    % 2) Add noise to S (S_ideal).
-    %    For example: Gaussian noise with SNR ~ 20 dB
-    % -----------------------------------------------------------
-%  noise_level = 0.5*1e-6; 
-%  S_noisy = S + noise_level * randn(size(S));
-% S_noisy1=ifft(S_noisy,[],2)
-%     % Optional: Poisson-based noise
-%     % S_noisy = poissrnd(max(0,S_ideal));
-% 
-% figure; 
-% subplot(2,1,1);
-% imagesc(abs(S)); colorbar; title('Ideal S');
-% subplot(2,1,2);
-% imagesc(abs(S_noisy)); colorbar; title('Noisy S');
-% Stild = ifft(S_noisy, [], 2);
-% % Preallocate
-% [N, twoNE, Ntau] = size(Ctot);
-% % twoNE should be 2*NE
-% NE_half = (twoNE / 2);  % = NE
-% M_new   = zeros(N, NE, Ntau);
-% 
-% for iDE = 1:Ntau
-%     M1 = squeeze(Ctot(:, 1:NE_half/2,         iDE));  % top half
-%     M2 = squeeze(Ctot(:, NE_half/2+NE_half+1:end, iDE));  % bottom half
-%     M  = [M1, M2];              % horizontally concatenate => (N x NE)
-%     M  = fftshift(M, 2);        % shift columns
-%     M_new(:,:,iDE) = M;
-% end
-% % Suppose we have:
-% %   M_new{iDE}  - cell array of forward matrices
-% %   S_noisy     - measured data (size [N x Ntau])
-% %   rhoDE_true  - optional ground truth, same [NE x Ntau]
-% [rhoGlob, rhoLoc] = two_step_wiener_min(M_new, S_noisy1);
-% % Now visualize:
-% rhoE3 = RhoDE_2_RhoE(rhoGlob,Ntau,Nc);
-% [PsiChan1,PsiChan2,rhoc]=DensMatChanSplitRect(rhoGlob,Ntau,50,true);
-% 
-% figure; 
-% subplot(1,2,1); imagesc(abs(rhoc)); colorbar; title('Global');
-% subplot(1,2,2); imagesc(abs(rhoE)); colorbar; title('Local');
